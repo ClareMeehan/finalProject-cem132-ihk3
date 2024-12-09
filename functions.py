@@ -17,16 +17,13 @@ def cleanup(raw_data):
     Will cleanup the data file in order for better processing
     Includes: Outlier removal, get time to start from 0 (its in julian dates), and center the magnitude around the mean
     
-    Inputs: raw data file from OGLE or from AAVS (can handle both formats)
+    Inputs: raw data file from OGLE
     
     Returns: cleaned up data file
     '''
 
     # the format of the data is col 1: time, col 2: intensity
-    if 'OGLE' in raw_data:
-        raw_data = np.loadtxt(raw_data)
-    if 'aavs' in raw_data:
-        raw_data = np.loadtxt(raw_data, skiprows = 1, delimeter = ',', usecols=(0,1))
+    raw_data = np.loadtxt(raw_data)
     
     # get the times
     times = raw_data[:,0] - np.min(raw_data[:,0])   # sld be the first cols minus the starting time taking
