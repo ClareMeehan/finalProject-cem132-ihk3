@@ -45,7 +45,7 @@ def Load_cleanup(raw_data):
     # and now we return the cleaned up data as an array
     return np.vstack((t_norm,i_norm,times,intensity)).T
 
-def frequencies(data, T_range=(1, 100), filter_threshold=0.2, plot_frequencies=False):
+def frequencies(data, T_range=(1, 200), filter_threshold=0.2, plot_frequencies=False):
     '''
     Calculates a filtered (normalized) frequency spectrum and the most likely Cepheid period
 
@@ -57,7 +57,7 @@ def frequencies(data, T_range=(1, 100), filter_threshold=0.2, plot_frequencies=F
             1: normalized intensities
             2: raw times
             3: raw intensities
-        T_range (tuple): tuple of length 2 containing the minimum and maximum periods (in days) to search for. Defaults to (1, 100)
+        T_range (tuple): tuple of length 2 containing the minimum and maximum periods (in days) to search for. Defaults to (1, 200)
         filter_threshold (float): float between 0 and 1 that determines the threshold of the filter. All frequency components
                                   with strengths less than the maximum strength * filter_threshold are discarded. Defaults to 0.2
         plot_frequencies (bool): Determines whether to plot the frequency spectrum. Defaults to False
