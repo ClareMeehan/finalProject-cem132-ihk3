@@ -55,45 +55,100 @@ def Load_cleanup(raw_data):
     return np.vstack((t_norm,i_norm,times,intensity)).T
 
 # now 
-def frequencies(data):
+def frequencies(data, T_range=(1, 100), filter_threshold=0.2, plot_frequencies=False):
     '''
-    Will take the clean data file in order to determine the max frequencies in it.
-    Includes an nonuniform fourier transform and the max frequency obtained from it.
+    Calculates a filtered (normalized) frequency spectrum and the most likely Cepheid period
+
+    Implements a non-uniform FFT to calculate the frequency spectrum. Can optionally create a plot of the frequency spectrum
     
-    Inputs: the cleaned data file from OGLE (cleaned using cleanup function)
-    
-    Returns: the most probably frequency, the most probable period, the frequency spectrum
+    Args:
+        data (numpy.ndarray): 2d array of data from the cleanup function, with the following columns:
+            0: normalized times
+            1: normalized intensities
+            2: raw times
+            3: raw intensities
+        T_range (tuple): tuple of length 2 containing the minimum and maximum periods (in days) to search for. Defaults to (1, 100)
+        filter_threshold (float): float between 0 and 1 that determines the threshold of the filter. All frequency components
+                                  with strengths less than the maximum strength * filter_threshold are discarded. Defaults to 0.2
+        plot_frequencies (bool): Determines whether to plot the frequency spectrum. Defaults to False
+
+    Returns:
+        T (float): the most likely Cepheid period, calculated from the maximum frequency component
+        f_k (numpy.ndarray): the filtered and normalized frequency spectrum
+        N (int): the number of calculated frequency components
     '''
     # get the times and intensities that have been normalized
     t_norm = data[:,0]
     i_norm = data[:,1]
-    times = data[:,2]
+    # get the range of unnormalized times
+    time_range = np.max(data[:,2]) - np.min(data[:,2])
     
-    # get double the size
-    N = t_norm.size * 2
-    # and we want to make sure this is even
-    N += N % 2 != 0
+    # calculate the minimum and maximum normalized frequencies
+    f_norm_min = 1 / (T_range[1] / time_range)
+    f_norm_max = 1 / (T_range[0] / time_range)
 
-    # get the list of frequencies from the 
+    # the number of frequencies to calculate (including positive and negative)
+    # not interested in frequencies greater than the max
+    N = int(f_norm_max.max()) * 2
+    # get the frequencies
+    k = np.arange(-N//2, N//2)
+
+    # calculate the Fourier coefficients for each frequency 
     f_k = nfft.nfft_adjoint(t_norm, i_norm, N)
-    freqs = np.arange(-N//2, N//2)
 
-    # we really only care about the frequencies above a power of like 100
-    f_k[np.abs(f_k) <= 100] = 0
+    # exclude frequencies less than the minimum frequency
+    f_k[np.abs(k) < int(f_norm_min.min())] = 0
+    # exclude frequencies with Fourier coefficient magnitudes less than the max coefficient * filter_threshold
+    f_k[np.abs(f_k) < np.abs(f_k).max() * filter_threshold] = 0
 
-    plt.plot(freqs, np.abs(f_k))
-    plt.savefig('power_graph.png')
+    # calculate the normalized period from the strongest frequency component
+    T_norm = -1 / k[np.argmax(np.abs(f_k))]
+    # unormalize the period
+    T = T_norm * time_range
 
-    # then we want to get the normalized period
-    T_recon_norm = -1 / freqs[np.argmax(np.abs(f_k))]
-    # and the unnormalized period
-    T_recon = T_recon_norm * (np.max(times) - np.min(times))
+    # plot the filtered frequency spectrum
+    if plot_frequencies:
+        # unnormalize the frequencies
+        k_unnorm = k / time_range
 
-    # we'll take the inverse of this to get the unnormlized frequency
-    max_f = 1 / T_recon
+        # plot the magnitude of the Fourier coefficients using only the positive frequencies
+        plt.plot(k_unnorm[k>0], np.abs(f_k[k>0]) / N)
+        plt.title('Filtered frequency spectrum ')
+        plt.xlabel('Frequencies [Hz]')
+        plt.ylabel('Magnitude of Fourier Coefficients')
 
-    # and we return
-    return max_f, T_recon
+        plt.savefig('freq_spect.png')
+
+    # return the period, the normalized frequency spectrum, and the number of frequencies
+    return T, f_k, N
+
+def reconstruct_lightcurve(data, T, f_k, N):
+    '''
+    Reconstructs the original light curve from the filtered frequency spectrum and plots the phase-folded light curve
+    
+    Args:
+        data (numpy.ndarray): 2d array of data from the cleanup function, with the following columns:
+            0: normalized times
+            1: normalized intensities
+            2: raw times
+            3: raw intensities
+        T (float): the most likely Cepheid period
+        f_k (numpy.ndarray): the filtered and normalized frequency spectrum
+        N (int): the number of calculated frequency components
+    '''
+
+    # reconstructs the normalized intensities
+    i_norm_recon = nfft.nfft(data[:,0], f_k, N).real / N
+    # unnormalizes the intensities
+    i_recon = i_norm_recon + np.mean(data[:,3])
+
+    # plots the phase-folded light curve
+    plt.plot(data[:,2] % T / T, i_recon, '.')
+    plt.title('Phase-folded reconstructed light curve')
+    plt.xlabel('Phase')
+    plt.ylabel('Reconstructed magnitude')
+
+    plt.savefig('reco_light_curve.png')
 
 
 A = Load_cleanup('OGLE-BLG-CEP-001.dat')
