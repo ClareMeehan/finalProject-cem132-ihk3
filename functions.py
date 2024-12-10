@@ -151,6 +151,33 @@ def reconstruct_lightcurve(data, T, f_k, N):
     plt.savefig('reco_light_curve.png')
 
 
+def mag_dist(P, cleaned_data):
+    '''
+    Will take the period and the data and calculate the absolute magnitude 
+    and distance to the cepheid star using the Period-Luminosity relation and 
+    distance modulus. 
+    
+    Inputs: the period, and the cleaned data file from OGLE (cleaned using cleanup function)
+    
+    Returns: the absolute magnitude, the distance in parsecs, the distance in ly's
+    '''
+    
+    # start by calculating the absolute magnitude of the star
+    M = -2.43 * np.log10(P - 1) - 4.05
+
+    # and now we calculate the apparent magnitude
+    # which is just the average of the intensities
+    m = np.mean(cleaned_data[:,3])
+
+    # the distance calculation, gives it in parsecs
+    d_parsec = 10 ** ((m - M)/5)
+
+    # we'll also return the light years
+    d_ly = d_parsec * 3.26156
+
+    return M, d_parsec, d_ly
+
+
 A = Load_cleanup('OGLE-BLG-CEP-001.dat')
 f, t = frequencies(A)
 print(t)
