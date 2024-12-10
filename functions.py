@@ -93,7 +93,7 @@ def frequencies(data, T_range=(1, 100), filter_threshold=0.2, plot_frequencies=F
 
     # calculate the normalized period from the strongest frequency component
     T_norm = -1 / k[np.argmax(np.abs(f_k))]
-    # unormalize the period
+    # unnormalize the period
     T = T_norm * time_range
 
     # plot the filtered frequency spectrum
@@ -173,15 +173,15 @@ def mag_dist(P, cleaned_data, m = None):
 
 if __name__ == '__main__':
     # load data
-    A = Load_cleanup('data/OGLE-LMC-CEP-1812.dat')
+    data = Load_cleanup('data/OGLE-LMC-CEP-1812.dat')
 
     # calculate period and frequency spectrum
-    T, f_k, N = frequencies(A, plot_frequencies=True)
+    T, f_k, N = frequencies(data, plot_frequencies=True)
     # plot the phase-folded light curve
-    reconstruct_lightcurve(A, T, f_k, N)
+    reconstruct_lightcurve(data, T, f_k, N)
 
     # calculate the distance to the Cepheid using the period-luminosity relation and the distance modulus
-    M, dp, dly = mag_dist(T,A)
+    M, dp, dly = mag_dist(T, data)
 
     print(f'Period: {T:.3f} days')
     print(f'Distance: {int(dp)} pc')
