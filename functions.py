@@ -47,11 +47,18 @@ def cleanup(raw_data):
     # and now we center the data around the mean
     intensity = intensity - np.mean(intensity)
 
+    # normalize times to [-0.5, 0.5]
+    t_norm = (times - np.min(times)) / (np.max(times) - np.min(times)) - 0.5
+    # normalize intensities around 0
+    i_norm = intensity - np.mean(intensity)
+
+
     # and now we return the cleaned up data as an array
     return np.vstack((times,intensity)).T
 
-array = cleanup('cephied_001')
-print(array[:10,:])
+
+
+
 
 
 
