@@ -1,17 +1,8 @@
-# Structure:
-# data cleaning function
-# frequencies
-# resconstruct the light curve
-# lightcurve
-# lightcurve
-# magnitude_distance
-
-# imports
 import numpy as np
 import nfft
 import matplotlib.pyplot as plt
 
-# cleanup function
+
 
 def Load_cleanup(raw_data):
     '''
@@ -54,7 +45,6 @@ def Load_cleanup(raw_data):
     # and now we return the cleaned up data as an array
     return np.vstack((t_norm,i_norm,times,intensity)).T
 
-# now 
 def frequencies(data, T_range=(1, 100), filter_threshold=0.2, plot_frequencies=False):
     '''
     Calculates a filtered (normalized) frequency spectrum and the most likely Cepheid period
@@ -117,7 +107,8 @@ def frequencies(data, T_range=(1, 100), filter_threshold=0.2, plot_frequencies=F
         plt.xlabel('Frequencies [Hz]')
         plt.ylabel('Magnitude of Fourier Coefficients')
 
-        plt.savefig('freq_spect.png')
+        plt.savefig('freq_spect.png', bbox_inches='tight')
+        plt.close()
 
     # return the period, the normalized frequency spectrum, and the number of frequencies
     return T, f_k, N
@@ -148,8 +139,8 @@ def reconstruct_lightcurve(data, T, f_k, N):
     plt.xlabel('Phase')
     plt.ylabel('Reconstructed magnitude')
 
-    plt.savefig('reco_light_curve.png')
-
+    plt.savefig('reco_light_curve.png', bbox_inches='tight')
+    plt.close()
 
 def mag_dist(P, cleaned_data, m = None):
     '''
@@ -179,22 +170,18 @@ def mag_dist(P, cleaned_data, m = None):
     return M, d_parsec, d_ly
 
 
-A = Load_cleanup('data/OGLE-LMC-CEP-1812.dat')
-T, f_k, N = frequencies(A)
-reconstruct_lightcurve(A, T, f_k, N)
-M, dp, dly = mag_dist(T,A)
-print(T)
-print(dp)
-    
 
+if __name__ == '__main__':
+    # load data
+    A = Load_cleanup('data/OGLE-LMC-CEP-1812.dat')
 
+    # calculate period and frequency spectrum
+    T, f_k, N = frequencies(A, plot_frequencies=True)
+    # plot the phase-folded light curve
+    reconstruct_lightcurve(A, T, f_k, N)
 
+    # calculate the distance to the Cepheid using the period-luminosity relation and the distance modulus
+    M, dp, dly = mag_dist(T,A)
 
-
-
-
-    
-
-
-
-
+    print(f'Period: {T:.3f} days')
+    print(f'Distance: {int(dp)} pc')
