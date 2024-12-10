@@ -163,7 +163,7 @@ def mag_dist(P, cleaned_data, m = None):
     '''
     
     # start by calculating the absolute magnitude of the star
-    M = -2.43 * np.log10(P) - 4.05
+    M = -2.76 * (np.log10(P) - 1) - 4.218
 
     # and now we calculate the apparent magnitude
     # which is just the average of the intensities
@@ -179,10 +179,10 @@ def mag_dist(P, cleaned_data, m = None):
     return M, d_parsec, d_ly
 
 
-A = Load_cleanup('OGLE-GD-CEP-0227.dat')
+A = Load_cleanup('data/OGLE-LMC-CEP-1812.dat')
 T, f_k, N = frequencies(A)
 reconstruct_lightcurve(A, T, f_k, N)
-M, dp, dly = mag_dist(T,A, m = 14.490)
+M, dp, dly = mag_dist(T,A)
 print(T)
 print(dp)
     
